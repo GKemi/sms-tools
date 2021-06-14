@@ -1,5 +1,6 @@
 ﻿from scipy.fftpack import fft
 import numpy as np
+import math
 
 """
 A3-Part-2: Optimal zero-padding
@@ -55,4 +56,28 @@ def optimalZeropad(x, fs, f):
         mX (numpy array) = The positive half of the DFT spectrum of the N point DFT after zero-padding 
                         x appropriately (zero-padding length to be computed). mX is (N/2)+1 samples long
     """
-    ## Your code here
+    
+    M = len(x)
+    samplesPerPeriod = fs / f
+
+    totalPeriods = M / samplesPerPeriod
+    paddingSize = int(samplesPerPeriod * np.ceil(totalPeriods))
+    fftBuffer = np.zeros(paddingSize)
+
+    # These variables help us to account for half of the signal, despite even or odd symmetry
+    hM1 = int(math.floor((M+1)/2)) # Duration of input signal's second half (for the buffer)
+    hM2 = int(math.floor(M/2)) # Duration of the input signal's first half (for the buffer)
+
+    # We alter the signal to be centred around 0
+    fftBuffer[:hM1] = x[hM2:]
+    fftBuffer[paddingSize-hM2:] = x[:hM2]
+
+    X = fft(fftBuffer)
+
+    mX = np.array([])
+
+    for element in X[:paddingSize//2+1]:
+        decibel = 20*math.log10( abs(element) )
+        mX = np.append(mX, decibel)
+    
+    return mX
