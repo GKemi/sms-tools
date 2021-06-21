@@ -59,6 +59,31 @@ def extractMainLobe(window, M):
     """
 
     w = get_window(window, M)         # get the window 
-    
-    ### Your code here
+    hM1 = int(math.floor( (M+1) / 2))
+    hM2 = int(math.floor( M / 2))
+
+    N = M * 8
+    hN = int(N / 2)
+
+    #Zero-Phase window the signal
+    fftbuffer = np.zeros(N)
+    fftbuffer[:hM1] = w[hM2:]
+    fftbuffer[N-hM2:] = w[:hM2]
+
+    X = fft(fftbuffer)
+    absX = abs(X)
+    absX[absX<eps] = eps #Set very, very, very small values to numpy's epsilon
+    mX = 20*np.log10(absX) 
+
+    mX1 = np.zeros(N)
+    mX1[:hN] = mX[hN:]
+    mX1[N-hN:] = mX[:hN]
+
+    min_index = 0
+    for i in range(N-hN, N):
+        if mX1[i] < mX1[i + 1]:
+            min_index = i - (N- hN)
+            break
+
+    return mX1[(hN - min_index):(hN + min_index + 1)]
     
